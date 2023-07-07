@@ -16,7 +16,8 @@ const Dish = mongoose.model('Dish', {
     dishIds: [String], // Liste des IDs des plats
     totalPrice: Number, // Total des prix des plats du panier
     isConfirmed: Boolean, // Indicateur pour vérifier si le panier est validé
-    itemCount: Number // Nombre d'éléments dans le panier
+    itemCount: Number, // Nombre d'éléments dans le panier
+    deliveryAddress: String // Adresse de livraison du panier
   });
   const Basket = mongoose.model('Basket', basketSchema);
 
@@ -35,7 +36,8 @@ const typeDefs = `#graphql
     dishIds:[String],
     totalPrice: Int,
     isConfirmed: Boolean,
-    itemCount: Int
+    itemCount: Int,
+    deliveryAddress: String
   }
 
   type Query {
@@ -61,7 +63,7 @@ const typeDefs = `#graphql
     initBasket: Basket
     addDishToBasket(basketid: ID!, dishId: ID ): Basket
     removeDishFromBasket(basketId: ID, dishId: ID): Basket
-
+    updateDeliveryAddress(basketId: ID, deliveryAddress: String): Basket
   }
 `
 
@@ -216,6 +218,28 @@ const resolvers = {
             } catch (error) {
                 throw new Error('Erreur lors de la suppression du plat du panier');
             }
+        }, 
+        updateDeliveryAddress: async (parent, args) => {
+            const { basketId, deliveryAddress } = args;
+            try {
+                // Recherche du panier par ID
+                const basket = await Basket.findById(basketId);
+        
+                // Vérification si le panier existe
+                if (!basket) {
+                  throw new Error('Panier non trouvé');
+                }
+        
+                // Mise à jour de l'adresse de livraison
+                basket.deliveryAddress = deliveryAddress;
+        
+                // Sauvegarde des modifications du panier dans la base de données
+                const updatedBasket = await basket.save();
+        
+                return updatedBasket;
+              } catch (error) {
+                throw new Error('Erreur lors de la mise à jour de l\'adresse de livraison du panier');
+              }
         }
 
 
